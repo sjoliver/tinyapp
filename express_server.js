@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 
+// tells Express app to use EJS as its templating/view engine 
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -15,6 +16,11 @@ app.get("/", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+})
+
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
 })
 
 // adding HTML code to a response - rendered on the client browser
