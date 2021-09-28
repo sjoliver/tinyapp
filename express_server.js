@@ -7,7 +7,7 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
-// tells Express app to use EJS as its templating/view engine 
+// tells Express app to use EJS as its templating/view engine
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -21,7 +21,7 @@ const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
 
-// defines route that will match the form POST request & handle it 
+// defines route that will match the form POST request & handle it
 app.post("/urls", (req, res) => {
   let randomString = generateRandomString();
   urlDatabase[randomString] = req.body.longURL; // log the POST request body to the console
@@ -34,24 +34,24 @@ app.get("/", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
-})
+});
 
-// points to template for table with short & long urls 
+// points to template for table with short & long urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase }; // { urls: { shortURL: longURL, shortURL: longURL }}
   res.render("urls_index", templateVars);
-})
+});
 
 // route definition to get the form -- points to template to create new short url
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
-})
+});
 
-// points to template for rendering info about a single url 
+// points to template for rendering info about a single url
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
-})
+});
 
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
@@ -61,10 +61,10 @@ app.get('/u/:shortURL', (req, res) => {
   //   res.send('Non-existent shortURL');
   // }
 
-  // should be refactored!! 
+  // should be refactored!!
   // adds "http://" if not present on longURL
   if (longURL.includes("http://")) {
-    res.redirect(`${longURL}`) 
+    res.redirect(`${longURL}`);
   } else {
     res.redirect(`http://${longURL}`);
   }
