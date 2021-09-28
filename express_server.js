@@ -10,15 +10,15 @@ app.use(bodyParser.urlencoded({extended: true}));
 // tells Express app to use EJS as its templating/view engine
 app.set("view engine", "ejs");
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 // generate a random shortURL (string) -- code credit to stackoverflow
 // .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
 const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
+};
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
 };
 
 // defines route that will match the form POST request & handle it
@@ -27,6 +27,28 @@ app.post("/urls", (req, res) => {
   urlDatabase[randomString] = req.body.longURL; // log the POST request body to the console
   res.redirect(`/urls/${randomString}`);
 });
+
+// deletes an entry (key:value)
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortKey = req.params.shortURL;
+
+  delete urlDatabase[shortKey];
+
+  res.redirect('/urls');
+});
+
+// updating the longURL associated with a specific shortURL (ex. change qew5c from www.hello.com to www.goodbye.com)
+app.post("/urls/:shortURL/edit", (req, res) => {
+  const shortKey = req.params.shortURL;
+  
+  // .edit comes from the <input> "name" in urls_show
+  const updatedUrl = req.body.edit;
+  
+  // updates the database entry to the new longURL
+  urlDatabase[shortKey] = updatedUrl;
+
+  res.redirect("/urls");
+})
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -61,7 +83,6 @@ app.get('/u/:shortURL', (req, res) => {
   //   res.send('Non-existent shortURL');
   // }
 
-  // should be refactored!!
   // adds "http://" if not present on longURL
   if (longURL.includes("http://")) {
     res.redirect(`${longURL}`);
@@ -70,14 +91,6 @@ app.get('/u/:shortURL', (req, res) => {
   }
 
 });
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortKey = req.params.shortURL;
-
-  delete urlDatabase[shortKey];
-
-  res.redirect('/urls');
-})
 
 // adding HTML code to a response - rendered on the client browser
 app.get("/hello", (req, res) => {
