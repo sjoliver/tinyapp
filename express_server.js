@@ -15,6 +15,19 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// generate a random shortURL (string) -- code credit to stackoverflow
+// .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
+const generateRandomString = () => {
+  return Math.random().toString(36).substr(2, 6);
+};
+
+// defines route that will match the form POST request & handle it 
+app.post("/urls", (req, res) => {
+  let randomString = generateRandomString();
+  urlDatabase[randomString] = req.body.longURL; // log the POST request body to the console
+  res.redirect(`/urls/${randomString}`);
+});
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -34,23 +47,29 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 })
 
-// defines route that will match the form POST request & handle it 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // log the POST request body to the console
-  res.send("Ok"); // respond with "Ok" -- to be replaced
-})
-
-// generate a random shortURL (string)
-// .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
-const generateRandomString = () => {
-  Math.random().toString(36).substr(2, 6)
-};
-
-// points to template for rending info about a single url 
+// points to template for rendering info about a single url 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 })
+
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+
+  // EDGE CASE: client requests a non-existent shortURL
+  // if(res.statusCode !== 302) {
+  //   res.send('Non-existent shortURL');
+  // }
+
+  // should be refactored!! 
+  // adds "http://" if not present on longURL
+  if (longURL.includes("http://")) {
+    res.redirect(`${longURL}`) 
+  } else {
+    res.redirect(`http://${longURL}`);
+  }
+
+});
 
 // adding HTML code to a response - rendered on the client browser
 app.get("/hello", (req, res) => {
