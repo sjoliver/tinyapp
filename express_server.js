@@ -41,9 +41,10 @@ app.post("/urls", (req, res) => {
 })
 
 // generate a random shortURL (string)
+// .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
 const generateRandomString = () => {
-
-}
+  Math.random().toString(36).substr(2, 6)
+};
 
 // points to template for rending info about a single url 
 app.get("/urls/:shortURL", (req, res) => {
