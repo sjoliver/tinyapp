@@ -71,6 +71,14 @@ app.get('/u/:shortURL', (req, res) => {
 
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortKey = req.params.shortURL;
+
+  delete urlDatabase[shortKey];
+
+  res.redirect('/urls');
+})
+
 // adding HTML code to a response - rendered on the client browser
 app.get("/hello", (req, res) => {
   res.send("<html><body> Hello <b>World</b></body></html>\n");
