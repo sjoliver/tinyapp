@@ -17,7 +17,7 @@ app.set("view engine", "ejs");
 
 // generate a random shortURL (string) -- code credit to stackoverflow
 // .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
-const generateRandomString = () => {
+const generateRandomString = () => { 
   return Math.random().toString(36).substr(2, 6);
 };
 
@@ -25,6 +25,14 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {
+  2304: {
+    id: "2304",
+    email: "sophie@hot-chick.com",
+    password: "frankie"
+  }
+}
 
 // defines route that will match the form POST request & handle it
 app.post("/urls", (req, res) => {
@@ -55,61 +63,68 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect("/urls");
 });
 
+// 
 app.post("/login", (req, res) => {
-  console.log(req);
-  const {username} = req.body;
-  res.cookie('Username', username);
+  const userID = req.body.userID;
+  res.cookie('user_id', userID);
 
   res.redirect("/urls");
 });
 
+//
 app.post("/logout", (req, res) => {
-  res.clearCookie("Username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  users[id] = {
+    id,
+    email,
+    password
+  }; 
+
+  res.cookie("user_id", users[id].id);
+  res.redirect("/urls");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+app.get("/register", (req, res) => {
+  res.render("registration");
 });
 
 // points to template for table with short & long urls
 app.get("/urls", (req, res) => {
-  const userName = req.cookies["Username"];
-  const templateVars = { urls: urlDatabase, username: userName };
+  const userID = req.cookies["user_id"];
+  const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render("urls_index", templateVars);
 });
 
 // route definition to get the form -- points to template to create new short url
 app.get("/urls/new", (req, res) => {
-  const userName = req.cookies["Username"];
-  const templateVars = { username: userName };
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: users[userID] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/show", (req, res) => {
-  const userName = req.cookies["Username"];
-  const templateVars = { username: userName };
+  const userID = req.cookies["user_id"];
+  const templateVars = { user: users[userID] };
   res.render("urls_show", templateVars);
 });
 
 // points to template for rendering info about a single url
 app.get("/urls/:shortURL", (req, res) => {
-  const userName = req.cookies["Username"];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: userName };
+  const userID = req.cookies["user_id"];
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[userID] };
   res.render("urls_show", templateVars);
 });
 
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-
-  // EDGE CASE: client requests a non-existent shortURL
-  // if(res.statusCode !== 302) {
-  //   res.send('Non-existent shortURL');
-  // }
 
   // adds "http://" if not present on longURL
   if (longURL.includes("http://")) {
@@ -124,6 +139,15 @@ app.get('/u/:shortURL', (req, res) => {
 app.get("/hello", (req, res) => {
   res.send("<html><body> Hello <b>World</b></body></html>\n");
 });
+
+app.get("/", (req, res) => {
+  res.redirect("/urls");
+});
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
