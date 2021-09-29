@@ -7,6 +7,11 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
+// middleware -- helps us read the values from the cookie
+// To set the values on the cookie, we can use res.cookie
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 // tells Express app to use EJS as its templating/view engine
 app.set("view engine", "ejs");
 
@@ -48,7 +53,20 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   urlDatabase[shortKey] = updatedUrl;
 
   res.redirect("/urls");
-})
+});
+
+app.post("/login", (req, res) => {
+  console.log(req);
+  const {username} = req.body;
+  res.cookie('Username', username);
+
+  res.redirect("/urls");
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("Username");
+  res.redirect("/urls");
+});
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -60,18 +78,28 @@ app.get("/urls.json", (req, res) => {
 
 // points to template for table with short & long urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase }; // { urls: { shortURL: longURL, shortURL: longURL }}
+  const userName = req.cookies["Username"];
+  const templateVars = { urls: urlDatabase, username: userName };
   res.render("urls_index", templateVars);
 });
 
 // route definition to get the form -- points to template to create new short url
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const userName = req.cookies["Username"];
+  const templateVars = { username: userName };
+  res.render("urls_new", templateVars);
+});
+
+app.get("/urls/show", (req, res) => {
+  const userName = req.cookies["Username"];
+  const templateVars = { username: userName };
+  res.render("urls_show", templateVars);
 });
 
 // points to template for rendering info about a single url
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const userName = req.cookies["Username"];
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: userName };
   res.render("urls_show", templateVars);
 });
 
@@ -100,4 +128,3 @@ app.get("/hello", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
