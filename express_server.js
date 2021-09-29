@@ -10,6 +10,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 // middleware -- helps us read the values from the cookie
 // To set the values on the cookie, we can use res.cookie
 const cookieParser = require('cookie-parser');
+const { reset } = require('nodemon');
 app.use(cookieParser());
 
 // tells Express app to use EJS as its templating/view engine
@@ -32,6 +33,17 @@ const users = {
     email: "sophie@hot-chick.com",
     password: "frankie"
   }
+}
+
+// given a email, will look through users object to see if that email already exists
+const findUserByEmail = (email) => {
+  for (const userID in users) {
+    const idOfUser = users[userID];
+    if (idOfUser.email === email) {
+      return idOfUser;
+    }
+  }
+  return null;
 }
 
 // defines route that will match the form POST request & handle it
@@ -87,6 +99,18 @@ app.post("/register", (req, res) => {
     email,
     password
   }; 
+
+  const user = findUserByEmail(email);
+
+  // if email or password are empty, send response 400 
+  if (!email || !password) {
+    return res.status(400).send("email or password cannot be blank");
+  };
+
+  // if email already exists in users obj, send response 400 
+  if (user) {
+    return res.status(400).send('user with that email currently exists')
+  };
 
   res.cookie("user_id", users[id].id);
   res.redirect("/urls");
