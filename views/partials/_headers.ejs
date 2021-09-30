@@ -12,13 +12,10 @@
     </div>
     <div>
       <% if (!user) { %>
-        <form method="POST" action="/login">
-            <label>Email:</label>
-              <input name="userID">
-              <button type="submit"; style="background-color: white; border-color: rgb(75, 77, 182); color: rgb(75, 77, 182); border-radius: 5px">Login</button>
-        </form>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
         <% } else { %>
-            <h5>Logged in as: <%= user.email %></h5>
+            <h6>Logged in as: <%= user.email %></h6>
             <form method="POST" action="/logout">
               <button type="submit"; style="background-color: white; border-color: rgb(184, 37, 189); color: rgb(184, 37, 189); border-radius: 5px">Logout</button>
             </form>
