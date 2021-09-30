@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 
 // generate a random shortURL (string) -- code credit to stackoverflow
 // .toString creates a string from Math.random -- .substr slices the string between index 2 and 6 (inclusive)
-const generateRandomString = () => { 
+const generateRandomString = () => {
   return Math.random().toString(36).substr(2, 6);
 };
 
@@ -43,13 +43,13 @@ const users = {
     id: 'a2304',
     email: 'sophie@hot-chick.com',
     password: 'frankie'
-  }, 
+  },
   b1234: {
     id: 'b1234',
     email: 'sophie@sophie.com',
     password: 'hello'
   }
-}
+};
 
 // given a email, will look through users object to see if that email already exists
 const findUserByEmail = (email) => {
@@ -72,7 +72,7 @@ const urlsForUser = (id) => {
     }
   }
 
-return userURLs;
+  return userURLs;
 };
 
 urlsForUser('a2304');
@@ -85,7 +85,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: userID};
 
   if (!users[userID]) {
-    res.send("Must be logged in to create a new short URL\n")
+    res.send("Must be logged in to create a new short URL\n");
   } else {
     res.redirect(`/urls/${randomString}`);
   }
@@ -95,45 +95,68 @@ app.post('/urls', (req, res) => {
 // deletes an entry (key:value)
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortKey = req.params.shortURL;
+  const userID = req.cookies['user_id'];
+  const urlOwner = urlDatabase[shortKey].userID;
 
-  delete urlDatabase[shortKey];
+  if (!userID) {
+    res.send('please login before continuing\n');
+    return;
+  }
+  
+  for (const urlObject of urlsForUser(userID)) {
+    if (urlObject.userID === urlOwner) {
+      delete urlDatabase[shortKey];
+      res.redirect('/urls');
+      return;
+    }
+  }
 
-  res.redirect('/urls');
 });
 
 // updating the longURL associated with a specific shortURL (ex. change qew5c from www.hello.com to www.goodbye.com)
 app.post('/urls/:shortURL/edit', (req, res) => {
   const shortKey = req.params.shortURL;
-  
-  // .edit comes from the <input> 'name' in urls_show
-  const updatedUrl = req.body.edit;
-  
-  // updates the database entry to the new longURL
-  urlDatabase[shortKey].longURL = updatedUrl;
+  const userID = req.cookies['user_id'];
+  const urlOwner = urlDatabase[shortKey].userID;
 
-  res.redirect('/urls');
+  if (!userID) {
+    res.send('Please login before continuing\n');
+    return;
+  }
+  
+  for (const urlObject of urlsForUser(userID)) {
+    if (urlObject.userID === urlOwner) {
+      // .edit comes from the <input> 'name' in urls_show
+      const updatedUrl = req.body.edit;
+      // updates the database entry to the new longURL
+      urlDatabase[shortKey].longURL = updatedUrl;
+      res.redirect('/urls');
+      return;
+    }
+  }
+
 });
 
-// 
+//
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userID = findUserByEmail(email);
 
-  // if email or password are empty, send response 400 
+  // if email or password are empty, send response 400
   if (!email || !password) {
     return res.status(400).send('email or password cannot be blank');
-  };
+  }
 
   // if email is not associated with a user, send 403
   if (!userID) {
     return res.status(403).send('no user with that email address');
-  };
+  }
 
-  // 
+  //
   if (userID.password !== password) {
     return res.status(403).send('password does not match');
-  }; 
+  }
 
   res.cookie('user_id', userID.id);
   res.redirect('/urls');
@@ -155,17 +178,17 @@ app.post('/register', (req, res) => {
     id,
     email,
     password
-  }; 
+  };
 
-  // if email or password are empty, send response 400 
+  // if email or password are empty, send response 400
   if (!email || !password) {
     return res.status(400).send('email or password cannot be blank');
-  };
+  }
 
-  // if email already exists in users obj, send response 400 
+  // if email already exists in users obj, send response 400
   if (user) {
-    return res.status(400).send('user with that email currently exists')
-  };
+    return res.status(400).send('user with that email currently exists');
+  }
 
   res.cookie('user_id', users[id].id);
   res.redirect('/urls');
@@ -186,7 +209,7 @@ app.get('/login', (req, res) => {
 // points to template for table with short & long urls
 app.get('/urls', (req, res) => {
   const userID = req.cookies['user_id'];
-  const templateVars = { urls: urlDatabase, user: users[userID] };
+  const templateVars = { urls: urlDatabase, user: users[userID], userID };
 
   if (!users[userID]) {
     res.render('urls_unauth', templateVars);
@@ -218,8 +241,10 @@ app.get('/urls/show', (req, res) => {
 // points to template for rendering info about a single url
 app.get('/urls/:shortURL', (req, res) => {
   const userID = req.cookies['user_id'];
-  const shortU = req.params.shortURL
+  const shortU = req.params.shortURL;
   const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
+
+  // if ()
 
   if (!users[userID]) {
     res.render('urls_unauth', templateVars);
@@ -242,9 +267,9 @@ app.get('/u/:shortURL', (req, res) => {
 
   // adds 'http://' if not present on longURL
   if (longURL.includes('http://')) {
-     res.redirect(`${longURL}`);
+    res.redirect(`${longURL}`);
   } else {
-     res.redirect(`http://${longURL}`);
+    res.redirect(`http://${longURL}`);
   }
 
 });
