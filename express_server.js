@@ -42,8 +42,8 @@ const findUserByEmail = (email) => {
     if (idOfUser.email === email) {
       return idOfUser;
     }
-    return null;
   }
+  return null;
 }
 
 // defines route that will match the form POST request & handle it
