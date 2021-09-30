@@ -14,6 +14,9 @@ const { reset } = require('nodemon');
 const e = require('express');
 app.use(cookieParser());
 
+// middleware for hash encrypting
+const bcrypt = require('bcryptjs');
+
 // tells Express app to use EJS as its templating/view engine
 app.set('view engine', 'ejs');
 
@@ -173,12 +176,15 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmail(email);
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   users[id] = {
     id,
     email,
-    password
+    password: hashedPassword
   };
+
+  console.log(users[id]);
 
   // if email or password are empty, send response 400
   if (!email || !password) {
