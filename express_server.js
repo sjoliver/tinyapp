@@ -8,11 +8,22 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
 // middleware -- helps us read the values from the cookie
-// To set the values on the cookie, we can use res.cookie
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+// app.use(cookieParser());
+
+// middleware -- cookie encryption
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['secretKey1','secretKey2', 'secretKey3'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
+
+
 const { reset } = require('nodemon');
 const e = require('express');
-app.use(cookieParser());
 
 // middleware for hash encrypting
 const bcrypt = require('bcryptjs');
@@ -83,7 +94,7 @@ urlsForUser('a2304');
 // defines route that will match the form POST request & handle it
 app.post('/urls', (req, res) => {
   let randomString = generateRandomString();
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: userID};
 
@@ -98,7 +109,7 @@ app.post('/urls', (req, res) => {
 // deletes an entry (key:value)
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortKey = req.params.shortURL;
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const urlOwner = urlDatabase[shortKey].userID;
 
   if (!userID) {
@@ -119,7 +130,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // updating the longURL associated with a specific shortURL (ex. change qew5c from www.hello.com to www.goodbye.com)
 app.post('/urls/:shortURL/edit', (req, res) => {
   const shortKey = req.params.shortURL;
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const urlOwner = urlDatabase[shortKey].userID;
 
   if (!userID) {
@@ -163,13 +174,13 @@ app.post('/login', (req, res) => {
     return res.status(403).send('password does not match');
   }
 
-  res.cookie('user_id', userID.id);
+  req.session.user_id = userID.id;
   res.redirect('/urls');
 });
 
 //
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -198,25 +209,25 @@ app.post('/register', (req, res) => {
     return res.status(400).send('user with that email currently exists');
   }
 
-  res.cookie('user_id', users[id].id);
+  req.session.user_id = users[id].id;
   res.redirect('/urls');
 });
 
 app.get('/register', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
   res.render('registration', templateVars);
 });
 
 app.get('/login', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
   res.render('login', templateVars);
 });
 
 // points to template for table with short & long urls
 app.get('/urls', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const templateVars = { urls: urlDatabase, user: users[userID], userID };
 
   if (!users[userID]) {
@@ -229,7 +240,7 @@ app.get('/urls', (req, res) => {
 
 // route definition to get the form -- points to template to create new short url
 app.get('/urls/new', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
 
   if (!users[userID]) {
@@ -241,14 +252,14 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/show', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render('urls_show', templateVars);
 });
 
 // points to template for rendering info about a single url
 app.get('/urls/:shortURL', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const shortU = req.params.shortURL;
 
   if (!urlDatabase[shortU]) {
@@ -292,7 +303,7 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
   const user = users[userID];
 
   if (!user) {
