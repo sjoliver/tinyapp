@@ -161,7 +161,7 @@ app.get('/urls/new', (req, res) => {
 
 app.get('/urls/show', (req, res) => {
   const userID = req.cookies['user_id'];
-  const templateVars = { user: users[userID] };
+  const templateVars = { urls: urlDatabase, user: users[userID] };
   res.render('urls_show', templateVars);
 });
 
@@ -177,9 +177,9 @@ app.get('/u/:shortURL', (req, res) => {
 
   // adds 'http://' if not present on longURL
   if (longURL.includes('http://')) {
-    res.redirect(`${longURL}`);
+     res.redirect(`${longURL}`);
   } else {
-    res.redirect(`http://${longURL}`);
+     res.redirect(`http://${longURL}`);
   }
 
 });
