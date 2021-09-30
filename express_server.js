@@ -11,6 +11,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 // To set the values on the cookie, we can use res.cookie
 const cookieParser = require('cookie-parser');
 const { reset } = require('nodemon');
+const e = require('express');
 app.use(cookieParser());
 
 // tells Express app to use EJS as its templating/view engine
@@ -23,15 +24,26 @@ const generateRandomString = () => {
 };
 
 const urlDatabase = {
-  'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com'
+  'b2xVn2': {
+    longURL: 'http://www.lighthouselabs.ca',
+    userID: '2304'
+  },
+  '9sm5xK': {
+    longURL: 'http://www.google.com',
+    userID: '2304'
+  }
 };
 
 const users = {
-  2304: {
-    id: '2304',
+  a2304: {
+    id: 'a2304',
     email: 'sophie@hot-chick.com',
     password: 'frankie'
+  }, 
+  b1234: {
+    id: 'b1234',
+    email: 'sophie@sophie.com',
+    password: 'hello'
   }
 }
 
@@ -44,13 +56,21 @@ const findUserByEmail = (email) => {
     }
   }
   return null;
-}
+};
 
 // defines route that will match the form POST request & handle it
 app.post('/urls', (req, res) => {
   let randomString = generateRandomString();
-  urlDatabase[randomString] = req.body.longURL; // log the POST request body to the console
-  res.redirect(`/urls/${randomString}`);
+  const userID = req.cookies['user_id'];
+  
+  urlDatabase[randomString] = {longURL: req.body.longURL, userID: userID};
+
+  if (!users[userID]) {
+    res.send("Must be logged in to create a new short URL\n")
+  } else {
+    res.redirect(`/urls/${randomString}`);
+  }
+
 });
 
 // deletes an entry (key:value)
@@ -70,7 +90,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const updatedUrl = req.body.edit;
   
   // updates the database entry to the new longURL
-  urlDatabase[shortKey] = updatedUrl;
+  urlDatabase[shortKey].longURL = updatedUrl;
 
   res.redirect('/urls');
 });
@@ -80,6 +100,10 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userID = findUserByEmail(email);
+
+  console.log(users);
+  console.log(email);
+  console.log(userID);
 
   // if email or password are empty, send response 400 
   if (!email || !password) {
@@ -95,7 +119,7 @@ app.post('/login', (req, res) => {
   if (userID.password !== password) {
     return res.status(403).send('password does not match');
   }; 
-  
+
   res.cookie('user_id', userID.id);
   res.redirect('/urls');
 });
@@ -110,14 +134,13 @@ app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const user = findUserByEmail(email);
 
   users[id] = {
     id,
     email,
     password
   }; 
-
-  const user = findUserByEmail(email);
 
   // if email or password are empty, send response 400 
   if (!email || !password) {
@@ -149,6 +172,7 @@ app.get('/login', (req, res) => {
 app.get('/urls', (req, res) => {
   const userID = req.cookies['user_id'];
   const templateVars = { urls: urlDatabase, user: users[userID] };
+  
   res.render('urls_index', templateVars);
 });
 
@@ -156,7 +180,13 @@ app.get('/urls', (req, res) => {
 app.get('/urls/new', (req, res) => {
   const userID = req.cookies['user_id'];
   const templateVars = { user: users[userID] };
-  res.render('urls_new', templateVars);
+
+  if (!users[userID]) {
+    res.redirect('/login');
+  } else {
+    res.render('urls_new', templateVars);
+  }
+
 });
 
 app.get('/urls/show', (req, res) => {
@@ -168,12 +198,13 @@ app.get('/urls/show', (req, res) => {
 // points to template for rendering info about a single url
 app.get('/urls/:shortURL', (req, res) => {
   const userID = req.cookies['user_id'];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[userID] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
+
   res.render('urls_show', templateVars);
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
 
   // adds 'http://' if not present on longURL
   if (longURL.includes('http://')) {
