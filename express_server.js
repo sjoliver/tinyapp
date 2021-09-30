@@ -45,12 +45,12 @@ const users = {
   a2304: {
     id: 'a2304',
     email: 'sophie@hot-chick.com',
-    password: 'frankie'
+    password: bcrypt.hashSync('frankie', 10)
   },
   b1234: {
     id: 'b1234',
     email: 'sophie@sophie.com',
-    password: 'hello'
+    password: bcrypt.hashSync('frankie', 10)
   }
 };
 
@@ -156,8 +156,10 @@ app.post('/login', (req, res) => {
     return res.status(403).send('no user with that email address');
   }
 
-  //
-  if (userID.password !== password) {
+  const passwordCompare = bcrypt.compareSync(password, userID.password);
+
+  // checks to see if the input password matches the hashed password saved
+  if (!passwordCompare) {
     return res.status(403).send('password does not match');
   }
 
