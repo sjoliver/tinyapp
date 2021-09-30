@@ -284,6 +284,12 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  const userID = req.cookies['user_id'];
+  const user = users[userID];
+
+  if (!user) {
+    return res.redirect('/login');
+  }
   res.redirect('/urls');
 });
 
