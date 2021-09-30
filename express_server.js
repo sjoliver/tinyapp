@@ -242,9 +242,13 @@ app.get('/urls/show', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const userID = req.cookies['user_id'];
   const shortU = req.params.shortURL;
-  const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
 
-  // if ()
+  if (!urlDatabase[shortU]) {
+    res.send('<html><body><h3>Invalid URL</h3><p>Please enter a valid URL to continue.</p><a href="/urls">Go back home</a></body></html>\n');
+    return;
+  };
+
+  const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
 
   if (!users[userID]) {
     res.render('urls_unauth', templateVars);
