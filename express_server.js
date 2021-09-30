@@ -26,11 +26,11 @@ const generateRandomString = () => {
 const urlDatabase = {
   'b2xVn2': {
     longURL: 'http://www.lighthouselabs.ca',
-    userID: '2304'
+    userID: 'a2304'
   },
   '9sm5xK': {
     longURL: 'http://www.google.com',
-    userID: '2304'
+    userID: 'b1234'
   }
 };
 
@@ -57,6 +57,13 @@ const findUserByEmail = (email) => {
   }
   return null;
 };
+
+// returns the URLs where the userID is equal to the id of the currently logged-in user
+const urlsForUser = (id) => {
+  
+
+  
+}
 
 // defines route that will match the form POST request & handle it
 app.post('/urls', (req, res) => {
@@ -100,10 +107,6 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userID = findUserByEmail(email);
-
-  console.log(users);
-  console.log(email);
-  console.log(userID);
 
   // if email or password are empty, send response 400 
   if (!email || !password) {
@@ -172,8 +175,13 @@ app.get('/login', (req, res) => {
 app.get('/urls', (req, res) => {
   const userID = req.cookies['user_id'];
   const templateVars = { urls: urlDatabase, user: users[userID] };
+
+  if (!users[userID]) {
+    res.render('urls_unauth', templateVars);
+  } else {
+    res.render('urls_index', templateVars);
+  }
   
-  res.render('urls_index', templateVars);
 });
 
 // route definition to get the form -- points to template to create new short url
@@ -198,12 +206,26 @@ app.get('/urls/show', (req, res) => {
 // points to template for rendering info about a single url
 app.get('/urls/:shortURL', (req, res) => {
   const userID = req.cookies['user_id'];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
+  const shortU = req.params.shortURL
+  const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
 
-  res.render('urls_show', templateVars);
+  if (!users[userID]) {
+    res.render('urls_unauth', templateVars);
+  } else if (userID !== urlDatabase[shortU].userID) {
+    res.send('Short URL does not belong to you.');
+  } else {
+    res.render('urls_show', templateVars);
+  }
+
 });
 
 app.get('/u/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
+
+  if (!urlDatabase[shortURL]) {
+    res.send('Invalid short URL');
+  }
+
   const longURL = urlDatabase[req.params.shortURL].longURL;
 
   // adds 'http://' if not present on longURL
