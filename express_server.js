@@ -28,6 +28,10 @@ const urlDatabase = {
     longURL: 'http://www.lighthouselabs.ca',
     userID: 'a2304'
   },
+  'we21ds': {
+    longURL: 'http://www.pinterest.com',
+    userID: 'a2304'
+  },
   '9sm5xK': {
     longURL: 'http://www.google.com',
     userID: 'b1234'
@@ -60,10 +64,18 @@ const findUserByEmail = (email) => {
 
 // returns the URLs where the userID is equal to the id of the currently logged-in user
 const urlsForUser = (id) => {
-  
+  let userURLs = [];
 
-  
-}
+  for (const shortU in urlDatabase) {
+    if (id === urlDatabase[shortU].userID) {
+      userURLs.push(urlDatabase[shortU]);
+    }
+  }
+
+return userURLs;
+};
+
+urlsForUser('a2304');
 
 // defines route that will match the form POST request & handle it
 app.post('/urls', (req, res) => {
