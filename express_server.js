@@ -253,7 +253,7 @@ app.get('/urls/new', (req, res) => {
   const templateVars = { user: users[userID] };
 
   if (!users[userID]) {
-    res.redirect('/login'); // redirect user to login page if they try to access the create new URL page
+    res.redirect('/login'); // redirect user to login page if they try to access the create new URL page (when unauthenticated)
   } else {
     res.render('urls_new', templateVars);
   }
@@ -270,6 +270,7 @@ app.get('/urls/:shortURL', (req, res) => {
     return;
   }
 
+  // must be declared after the above if statement (or else error is returned that longURL is not defined)
   const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
 
   if (!users[userID]) {
@@ -289,6 +290,7 @@ app.get('/u/:shortURL', (req, res) => {
     res.send('Invalid short URL');
   }
 
+  // must be declared after the above if statement (or else error is returned that longURL is not defined)
   const longURL = urlDatabase[req.params.shortURL].longURL;
 
   // adds 'http://' if not present on longURL
@@ -318,7 +320,6 @@ app.get('/', (req, res) => {
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
