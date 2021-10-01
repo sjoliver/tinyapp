@@ -1,4 +1,5 @@
 const express = require('express');
+const { findUserByEmail } = require('./helpers');
 const app = express();
 const PORT = 8080;
 
@@ -63,17 +64,6 @@ const users = {
     email: 'sophie@sophie.com',
     password: bcrypt.hashSync('frankie', 10)
   }
-};
-
-// given a email, will look through users object to see if that email already exists
-const findUserByEmail = (email, database) => {
-  for (const userID in database) {
-    const idOfUser = database[userID];
-    if (idOfUser.email === email) {
-      return idOfUser;
-    }
-  }
-  return null;
 };
 
 // returns the URLs where the userID is equal to the id of the currently logged-in user
