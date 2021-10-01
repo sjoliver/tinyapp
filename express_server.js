@@ -208,6 +208,12 @@ app.post('/register', (req, res) => {
 app.get('/register', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
+
+  if(userID) {
+    res.redirect('/urls');
+    return;
+  };
+  
   res.render('registration', templateVars);
 });
 
@@ -221,7 +227,6 @@ app.get('/login', (req, res) => {
   };
   
   res.render('login', templateVars);
-  
 });
 
 // points to template for table with short & long urls
