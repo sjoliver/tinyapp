@@ -88,6 +88,8 @@ app.post('/urls', (req, res) => {
   
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: userID};
 
+  console.log(urlDatabase);
+
   if (!users[userID]) {
     res.send("Must be logged in to create a new short URL\n");
   } else {
@@ -212,7 +214,14 @@ app.get('/register', (req, res) => {
 app.get('/login', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
+
+  if(userID) {
+    res.redirect('/urls');
+    return;
+  };
+  
   res.render('login', templateVars);
+  
 });
 
 // points to template for table with short & long urls
