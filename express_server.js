@@ -66,9 +66,9 @@ const users = {
 };
 
 // given a email, will look through users object to see if that email already exists
-const findUserByEmail = (email) => {
-  for (const userID in users) {
-    const idOfUser = users[userID];
+const findUserByEmail = (email, database) => {
+  for (const userID in database) {
+    const idOfUser = database[userID];
     if (idOfUser.email === email) {
       return idOfUser;
     }
@@ -155,7 +155,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const userID = findUserByEmail(email);
+  const userID = findUserByEmail(email, users);
 
   // if email or password are empty, send response 400
   if (!email || !password) {
@@ -188,7 +188,7 @@ app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmail(email);
+  const user = findUserByEmail(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   users[id] = {
