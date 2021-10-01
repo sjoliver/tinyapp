@@ -8,10 +8,6 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
-// middleware -- helps us read the values from the cookie
-// const cookieParser = require('cookie-parser');
-// app.use(cookieParser());
-
 // middleware -- cookie encryption
 const cookieSession = require('cookie-session');
 app.use(cookieSession({
