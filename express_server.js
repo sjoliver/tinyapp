@@ -16,7 +16,7 @@ app.use(cookieSession({
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 
 const { reset } = require('nodemon');
@@ -201,10 +201,10 @@ app.get('/register', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
 
-  if(userID) {
+  if (userID) {
     res.redirect('/urls');
     return;
-  };
+  }
 
   res.render('registration', templateVars);
 });
@@ -213,10 +213,10 @@ app.get('/login', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
 
-  if(userID) {
+  if (userID) {
     res.redirect('/urls');
     return;
-  };
+  }
   
   res.render('login', templateVars);
 });
@@ -261,7 +261,7 @@ app.get('/urls/:shortURL', (req, res) => {
   if (!urlDatabase[shortU]) {
     res.send('<html><body><h3>Invalid URL</h3><p>Please enter a valid URL to continue.</p><a href="/urls">Go back home</a></body></html>\n');
     return;
-  };
+  }
 
   const templateVars = { shortURL: shortU, longURL: urlDatabase[req.params.shortURL].longURL, user: users[userID] };
 
