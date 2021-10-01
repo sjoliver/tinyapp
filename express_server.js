@@ -3,6 +3,9 @@ const { findUserByEmail } = require('./helpers');
 const app = express();
 const PORT = 8080;
 
+const { reset } = require('nodemon');
+const e = require('express');
+
 // middleware -- converts POST request body from a Buffer to a string (human-readable)
 // adds the data to the req object under the key body
 const bodyParser = require('body-parser');
@@ -17,10 +20,6 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-
-
-const { reset } = require('nodemon');
-const e = require('express');
 
 // middleware for hash encrypting
 const bcrypt = require('bcryptjs');
@@ -77,6 +76,10 @@ const urlsForUser = (id) => {
 
 urlsForUser('a2304');
 
+// -------------------------
+// ----- POST REQUESTS -----
+// -------------------------
+
 // defines route that will match the form POST request & handle it
 app.post('/urls', (req, res) => {
   let randomString = generateRandomString();
@@ -92,17 +95,19 @@ app.post('/urls', (req, res) => {
 
 });
 
-// deletes an entry (key:value)
+// deletes a shortURL/longURL entry from the list (key:value pair)
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortKey = req.params.shortURL;
   const userID = req.session.user_id;
   const urlOwner = urlDatabase[shortKey].userID;
 
+  // checks to see if user is logged in
   if (!userID) {
     res.send('please login before continuing\n');
     return;
   }
   
+  // use the urlsForUser fn to determine if user should be able to delete entry
   for (const urlObject of urlsForUser(userID)) {
     if (urlObject.userID === urlOwner) {
       delete urlDatabase[shortKey];
@@ -119,11 +124,13 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const userID = req.session.user_id;
   const urlOwner = urlDatabase[shortKey].userID;
 
+  // checks to see if user is logged in
   if (!userID) {
     res.send('Please login before continuing\n');
     return;
   }
   
+  // use the urlsForUser fn to determine if user should be able to edit entry
   for (const urlObject of urlsForUser(userID)) {
     if (urlObject.userID === urlOwner) {
       // .edit comes from the <input> 'name' in urls_show
@@ -137,7 +144,6 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 
 });
 
-//
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -164,12 +170,13 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
-//
 app.post('/logout', (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
 
+// creates a new user in the users database 
+// uses bcrypt to hash the password for the new user
 app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
@@ -197,10 +204,15 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
+// -------------------------
+// ----- GET REQUESTS ------
+// -------------------------
+
 app.get('/register', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
 
+  // redirect user to urls if already logged in
   if (userID) {
     res.redirect('/urls');
     return;
@@ -213,6 +225,7 @@ app.get('/login', (req, res) => {
   const userID = req.session.user_id;
   const templateVars = { user: users[userID] };
 
+  // redirect user to urls if already logged in
   if (userID) {
     res.redirect('/urls');
     return;
@@ -227,9 +240,9 @@ app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase, user: users[userID], userID };
 
   if (!users[userID]) {
-    res.render('urls_unauth', templateVars);
+    res.render('urls_unauth', templateVars); // render the template which tells user to either login or register 
   } else {
-    res.render('urls_index', templateVars);
+    res.render('urls_index', templateVars); // render the correct index template if user is authenticated
   }
   
 });
@@ -240,17 +253,11 @@ app.get('/urls/new', (req, res) => {
   const templateVars = { user: users[userID] };
 
   if (!users[userID]) {
-    res.redirect('/login');
+    res.redirect('/login'); // redirect user to login page if they try to access the create new URL page
   } else {
     res.render('urls_new', templateVars);
   }
 
-});
-
-app.get('/urls/show', (req, res) => {
-  const userID = req.session.user_id;
-  const templateVars = { urls: urlDatabase, user: users[userID] };
-  res.render('urls_show', templateVars);
 });
 
 // points to template for rendering info about a single url
