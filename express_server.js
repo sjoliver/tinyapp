@@ -88,8 +88,6 @@ app.post('/urls', (req, res) => {
   
   urlDatabase[randomString] = {longURL: req.body.longURL, userID: userID};
 
-  console.log(urlDatabase);
-
   if (!users[userID]) {
     res.send("Must be logged in to create a new short URL\n");
   } else {
@@ -189,8 +187,6 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-  console.log(users[id]);
-
   // if email or password are empty, send response 400
   if (!email || !password) {
     return res.status(400).send('email or password cannot be blank');
@@ -213,7 +209,7 @@ app.get('/register', (req, res) => {
     res.redirect('/urls');
     return;
   };
-  
+
   res.render('registration', templateVars);
 });
 
